@@ -1,50 +1,47 @@
-import json
 import random
 import string
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
 
-# === إعداد توكن البوت ===
-BOT_TOKEN = "7735819374:AAGYHa59FZwXq21vNCccyMqj684CV4pJCe8"
+# تخزين روابط الربط {رقم_الواتس: كود_الربط}
+linked_codes = {}
 
-# === توليد كود عشوائي ===
-def generate_code(length=6):
+def generate_code(length=8):
     return   .join(random.choices(string.ascii_letters + string.digits, k=length))
 
-# === تحميل أكواد موجودة مسبقًا ===
-def load_codes():
-    try:
-        with open("link_codes.json", "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
-
-# === حفظ الأكواد الجديدة ===
-def save_codes(codes):
-    with open("link_codes.json", "w") as f:
-        json.dump(codes, f, indent=2)
-
-# === عند استقبال رسالة من المستخدم ===
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_input = update.message.text.strip()
-    if user_input.startswith("01") or user_input.startswith("201"):
-        phone = user_input.replace("+", "")
-        code = generate_code()
-        codes = load_codes()
-        codes[code] = phone
-        save_codes(codes)
-        await update.message.reply_text(f"✅ تم إنشاء كود الربط بنجاح!\n\n📞 الرقم: {phone}\n🔗 الكود: `{code}`\n\nانسخه وارسله في بوت الواتساب.\nمثال: `.ربط {code}`", parse_mode="Markdown")
-    else:
-        await update.message.reply_text("📱 من فضلك أرسل رقم الواتساب بشكل صحيح.\nمثال: 201234567890")
-
-# === أمر /start ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 أهلاً بيك في بوت ربط واتساب.\n\nارسل رقم واتسابك لعمل كود ربط.\nمثال: `201234567890`", parse_mode="Markdown")
+    await update.message.reply_text(
+        "مرحباً! أرسل رقم واتسابك لربط البوت.\nمثال: 201234567890"
+    )
 
-# === تشغيل البوت ===
-if __name__ == "__main__":
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+async def link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1:
+        await update.message.reply_text("اكتب رقم واتساب واحد فقط بعد الأمر.")
+        return
+    whatsapp_number = context.args[0]
+    code = generate_code()
+    linked_codes[whatsapp_number] = code
+    await update.message.reply_text(
+        f"هذا كود الربط الخاص بك:\n`{code}`\n\n"
+        "اذهب إلى بوت الواتساب وأرسل الكود لربط حسابك.",
+        parse_mode="Markdown"
+    )
+
+async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(text="تم الضغط على الزر!")
+
+def main():
+    TOKEN = "8189292683:AAE53IGPbRVoe5Sc3a5saQGXHzOE-NWxPWY"  # حط توكن بوت التيليجرام هنا
+    app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("🤖 بوت التليجرام شغال...")
+    app.add_handler(CommandHandler("link", link))
+    app.add_handler(CallbackQueryHandler(button_callback))
+
+    print("بوت تيليجرام شغال...")
     app.run_polling()
+
+if __name__ ==  __main__ :
+    main()

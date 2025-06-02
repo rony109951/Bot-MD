@@ -9,7 +9,7 @@ TOKEN = "7735819374:AAGYHa59FZwXq21vNCccyMqj684CV4pJCe8"
 linked_numbers = {}
 
 def generate_code(length=8):
-    return   .join(random.choices(string.ascii_letters + string.digits, k=length))
+    return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(

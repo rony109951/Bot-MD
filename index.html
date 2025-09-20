@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تفعيل59998ميجا</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Tahoma, sans-serif;
+      text-align: center;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* خلفية فديو */
+    video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: -2;
+    }
+
+    /* طبقة أحمر×أسود متحرك */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(-45deg, #000, #300, #900, #000);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      opacity: 0.7;
+      z-index: -1;
+    }
+    @keyframes gradient {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    /* المربعات */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 80%;
+      margin: 50px auto;
+    }
+    .box {
+      padding: 40px;
+      font-size: 28px;
+      border-radius: 15px;
+      background: rgba(0,0,0,0.6);
+      text-shadow: 0 0 15px;
+      font-weight: bold;
+    }
+    .orange { color: orange; text-shadow: 0 0 15px orange; }
+    .vodafone { color: red; text-shadow: 0 0 15px red; }
+    .etisalat { color: #00ff66; text-shadow: 0 0 15px #00ff66; }
+    .we { color: violet; text-shadow: 0 0 15px violet; }
+
+    /* الفورم */
+    .form-container {
+      margin: 30px auto;
+    }
+    input {
+      padding: 10px;
+      width: 250px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      text-align: center;
+    }
+    button {
+      margin-top: 15px;
+      padding: 12px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      background: #fff;
+      color: #000;
+      cursor: pointer;
+      text-shadow: 0 0 10px #fff;
+      box-shadow: 0 0 20px #fff;
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 20px;
+      text-shadow: 0 0 10px #fff;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      font-size: 14px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <!-- الفيديو الخلفية -->
+  <video autoplay muted loop>
+    <source src="rtt.mp4" type="video/mp4">
+  </video>
+  <div class="overlay"></div>
+
+  <!-- المربعات -->
+  <div class="grid">
+    <div class="box orange">Orange 🟠</div>
+    <div class="box vodafone">Vodafone 🔴</div>
+    <div class="box etisalat">Etisalat 🟢</div>
+    <div class="box we">WE 🟣</div>
+  </div>
+
+  <!-- الفورم -->
+  <div class="form-container">
+    <p>اضف رقمك لتفعيل العرض</p>
+    <input type="text" id="phone" placeholder="ادخل رقمك (11 رقم يبدأ بـ01)">
+    <br>
+    <button onclick="addNumber()">إضافة</button>
+    <div class="message" id="msg"></div>
+  </div>
+
+  <!-- الفوتر -->
+  <footer>
+    جميع الحقوق محفوظة لد روني البحيره © 2025
+  </footer>
+
+  <!-- جافاسكربت -->
+  <script>
+    function addNumber() {
+      const phone = document.getElementById("phone").value;
+      const msg = document.getElementById("msg");
+
+      if (!/^01\d{9}$/.test(phone)) {
+        msg.innerHTML = "⚠️ الرقم غير صحيح، لازم يكون 11 رقم ويبدأ بـ01";
+        return;
+      }
+
+      msg.innerHTML = "⌛ لحظة بيتم الإضافة...";
+      setTimeout(() => {
+        msg.innerHTML = "⏳ لحظة لتأكيد...";
+        setTimeout(() => {
+          msg.innerHTML = "✅ تمت الإضافة 59997ميجا";
+        }, 2000);
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

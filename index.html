@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تعديل الصور - Nano Banana</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+      color: #fff;
+    }
+    #background-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -1;
+    }
+    .container {
+      position: relative;
+      text-align: center;
+      padding: 50px;
+      background: rgba(0,0,0,0.5);
+      min-height: 100vh;
+    }
+    input[type="file"] {
+      margin: 20px 0;
+    }
+    textarea {
+      width: 80%;
+      height: 80px;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #28a745;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+    }
+    .result img {
+      max-width: 90%;
+      margin: 10px;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+
+<video autoplay muted loop id="background-video">
+  <source src="rtt.mp4" type="video/mp4">
+  Your browser does not support HTML5 video.
+</video>
+
+<div class="container">
+  <h1>تعديل الصور باستخدام Nano Banana 🍌</h1>
+  <input type="file" id="imageInput" multiple accept="image/*">
+  <br>
+  <textarea id="promptInput" placeholder="اكتب الوصف هنا"></textarea>
+  <br>
+  <button onclick="editImages()">تعديل الصور</button>
+
+  <h2>النتائج:</h2>
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+async function editImages() {
+    const files = document.getElementById( imageInput ).files;
+    const prompt = document.getElementById( promptInput ).value;
+    if(files.length === 0) { alert("اختر صورة واحدة على الأقل"); return; }
+    if(prompt.trim() === "") { alert("اكتب الوصف"); return; }
+
+    const resultDiv = document.getElementById( result );
+    resultDiv.innerHTML = "⏳ جاري رفع ومعالجة الصور...";
+
+    try {
+        // تحويل الصور لـ Base64
+        const base64Files = [];
+        for(let file of files) {
+            const reader = new FileReader();
+            const p = new Promise((resolve) => {
+                reader.onload = () => resolve(reader.result.split( , )[1]);
+            });
+            reader.readAsDataURL(file);
+            base64Files.push(await p);
+        }
+
+        // إرسال للـ API
+        const res = await fetch("https://a1d.ai/api/nano-banana/edit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: prompt,
+                images: base64Files,
+                enable_base64_output: false
+            })
+        });
+
+        const data = await res.json();
+
+        if(!data.data || !data.data.id) {
+            resultDiv.innerHTML = "❌ حدث خطأ من API";
+            console.log(data);
+            return;
+        }
+
+        // متابعة حالة المعالجة
+        let outputs = [];
+        for(let i=0;i<20;i++) {
+            const statusRes = await fetch(`https://a1d.ai/api/nano-banana/status?id=${data.data.id}`);
+            const statusData = await statusRes.json();
+            if(statusData.data && statusData.data.outputs && statusData.data.outputs.length > 0) {
+                outputs = statusData.data.outputs;
+                break;
+            }
+            resultDiv.innerHTML = `⏳ جاري معالجة الصور... ${i*5}%`;
+            await new Promise(r => setTimeout(r,5000));
+        }
+
+        if(outputs.length === 0) {
+            resultDiv.innerHTML = "❌ انتهى الوقت ولم يتم توليد الصور";
+            return;
+        }
+
+        // عرض النتائج
+        resultDiv.innerHTML = "";
+        for(let url of outputs) {
+            const img = document.createElement( img );
+            img.src = url;
+            resultDiv.appendChild(img);
+        }
+
+    } catch(e) {
+        resultDiv.innerHTML = "❌ حدث خطأ أثناء العملية";
+        console.log(e);
+    }
+}
+</script>
+
+</body>
+</html>
